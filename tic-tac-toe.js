@@ -5,6 +5,7 @@ const Gameboard = (() => {
         board[index] = symbol;
     };
     const getSquare = (index) => board[index];
+    const resetBoard = () => board = new Array(9).fill(null);
 
     return {getGameBoard, setSquare, getSquare};
 })();
@@ -35,45 +36,43 @@ const Player = (name, symbol) =>{
     const getSymbol = () => symbol;
     const getWins = () => wins;
     const addWins = () => ++wins;
+    const setName = (newName) => name = newName;
+    const setSymbol = (newSymbol) => symbol = newSymbol;
 
-    return {getName, getSymbol, getWins, addWins};
+    return {getName, getSymbol, getWins, addWins, setName, setSymbol};
 };
 
 
 const Game = (() => {
-    let p1 = Player ('p1', 'X');
-    let p2 = Player ('p2', '0');
+    let p1 = Player ('P1', 'X');
+    let p2 = Player ('P2', '0');
     let currentPlayer = p1;
     let gameState;
     displayController.renderGameBoard();
 
     const markAt = (index) => {         //maybe mnove this into Player also ?, think of it as Turn based, and player.attack()
                                         // eventListener should maybe start from the currentPlayer's markAt, then 
-                                        //that will ASK the game's markAt if the player can play there. it shouldnt be the
-                                        // other way around cause it more complicated re-checking player state again (3 checks vs 2)
-                                        // it should be 
-                                        //Player: 'hey game can i play here?'
-                                        //Game: 'yes you can!, ok now i render, checkwin & switch player'
+                                        //that will ASK the game's markAt if they are allowed to play there
+                                        // NVM this would make redundant code cause the event listener would reference currentPlayer.attack()
+                                        // then this player would ask 'Game' to verify if they are currentPlayer.... which they obv are..
         let symbol = getCurrentPlayer().getSymbol();
         let square = Gameboard.getSquare(index);
         if (square == null){
             console.log(`marking at ${index}`);
             Gameboard.setSquare(index, symbol);
-
-            displayController.renderGameBoard();
-            //checkwin
             let winner = checkWin();
             if (winner == "playing"){
                 //still playing
                 console.log("still playing");
+                switchPlayers();    //add css class to this player
             }else if (winner == 'draw'){
-                console.log(draw);
+                console.log('draw');
             }else{
+                // someone won... how do i keep track of winners/# of wins?? on game or gameboard ? also enable a newgame button
                 console.log(`${winner.getName()} wins with ${winner.getSymbol()}`);
-                // someone won
-
+                winner.addWins();
             }
-            switchPlayers();
+            displayController.renderGameBoard();
             return symbol;
         }else{
             console.log(`square at index ${index} is taken by ${square}`);
@@ -91,38 +90,44 @@ const Game = (() => {
     const getGameState = () => gameState;
 
     const checkWin = () => {
-            //2 nested loops to check the 3 rows
-             // return win ? make hp variable in each player ? dont know
+            // return win ? make hp variable in each player ? dont know
             //TODO maybe replace these checks with putting the sqaures its comparing against in an array , then use arrays.every()
             //TODO prob also move these functions around... maybe in gameboard,, dont know but need to clean overall  
+            
+            //check the 3 rows
+            //0 1 2,    345,    6 7 8
             for (let i = 0; i<9; i+=3){
                 let symbol = Gameboard.getSquare(i);
-                if((symbol != null) && (symbol == Gameboard.getSquare(i+1) && symbol == Gameboard.getSquare(i+2)) ){
+                let nextSymbols = [Gameboard.getSquare(i+1), Gameboard.getSquare(i+2)];     
+                if (symbol && nextSymbols.every( next => next == symbol)){
                     console.log('row');
                     return (symbol == p1.getSymbol()) ? p1 : p2;
-                } 
+                }
             }
 
-            //2 nested loops to check the 3 columns
+            //check the 3 columns
+            //0 3 6,    1 4 7,  2 5 8
             for (let i = 0; i<3; i++){
                 let symbol = Gameboard.getSquare(i);
-                if((symbol != null) && (symbol == Gameboard.getSquare(i+3) && symbol== Gameboard.getSquare(i+6)) ){ 
-                    console.log(`column ${i} = ${i+3} = ${i+6}
-                                    ${symbol} = ${Gameboard.getSquare(i+3)} = ${Gameboard.getSquare(i+6)}`);
+                let nextSymbols = [Gameboard.getSquare(i+3), Gameboard.getSquare(i+6)];
+                if(symbol && nextSymbols.every( next => next == symbol)){ 
+                    console.log(`column ${i} = ${i+3} = ${i+6} with ${symbol} = ${Gameboard.getSquare(i+3)} = ${Gameboard.getSquare(i+6)}`);
                     return (symbol == p1.getSymbol()) ? p1: p2;
                 } 
             }
 
 
-            //2 nested loops to check the 2 diagonals
+            //check the 2 diagonals
+            //0 4 8,     2 4 6
+            let j = 4;
             for (let i = 0; i<3; i+=2){
-                let j = 4;
                 let symbol = Gameboard.getSquare(i);
-                if((symbol != null) && (symbol == Gameboard.getSquare(i+j) && symbol == Gameboard.getSquare(i+j+j)) ){
+                let nextSymbols = [ Gameboard.getSquare(i+j), Gameboard.getSquare(i+j+j)];
+                if(symbol && nextSymbols.every( next => next == symbol) ){
                     console.log('diagonal');
                      return (symbol == p1.getSymbol()) ? p1 : p2;
                 } 
-                j -=2;
+                j -=2;    
             }
 
 
@@ -133,19 +138,12 @@ const Game = (() => {
             }else{
                 return 'playing';
             }
-
-
-            //maybe put a checkRow() checkColumn, etc in the Gameboard obj itself.. yea probably better
     };
 
     return {markAt, switchPlayers, getCurrentPlayer};
 })();
 
 
-
-
-
-// TODO have to write this currentPlayer logic.. maybe difficult cause maybe the order of functions matters here dont know
-//TODO Game's checkWin + renderGameBoard + ???,  prob put these into 1 function
-
-
+//TODO use an arrayList to contain the players instead of just p1 and p2
+//then to fins winner, loop through it (prob array.find), to finds the matching symbol to the board squares...
+// this simulates a 'what if we had X num of player for a diff game'
