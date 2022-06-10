@@ -44,3 +44,7 @@ body{
     justify-content: center;
     align-content: center;
 }
+
+.p2-name::after, .p1-name::after{
+    content: ":";
+}
