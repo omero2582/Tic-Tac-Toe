@@ -31,6 +31,10 @@ body{
     justify-content: space-between;
 }
 
+.p2-name::after, .p1-name::after{
+    content: ":";
+}
+
 .gameSquare{
     width: var(--game-square-size);
     height: var(--game-square-size);
@@ -44,7 +48,19 @@ body{
     justify-content: center;
     align-content: center;
 }
+.game-footer{
+    display: grid;
+    grid-auto-flow: column;
+    column-gap: 10px;
+    justify-content: center;
+}
 
-.p2-name::after, .p1-name::after{
-    content: ":";
+.game-footer button{
+    
+    height: 40px;
+    width: 100px;
+}
+
+button:hover{
+    cursor: pointer;
 }

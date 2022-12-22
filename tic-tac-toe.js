@@ -196,3 +196,6 @@ const displayController = (() => {
 
     return {renderGameBoard, renderPlayerDisplays}
 })();
+
+//TODO  displayController.log, to log to a footer below the button section:
+// 1 header main feeedback text, another one below it as a description
